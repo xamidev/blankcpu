@@ -24,6 +24,7 @@
 typedef enum
 {
 	// TODO: Bitwise operations (OR, AND, XOR, NOT, ...)
+	NOP = 0,
 	MOV = 1,
 	ADD,
 	SUB,
@@ -47,6 +48,7 @@ typedef struct
 	uint16_t pc;
 	bool halted;
 	bool equal_flag;
+	int flag_clear_delay;
 } CPU_t;
 
 CPU_t cpu;
@@ -59,6 +61,8 @@ void cpu_init()
 {
 	cpu.pc = 0;
 	cpu.halted = false;
+	cpu.equal_flag = false;
+	cpu.flag_clear_delay = 0;
 	for (size_t i=0; i<NUM_REGISTERS; i++)
 	{
 		cpu.reg[i] = 0;
@@ -73,8 +77,19 @@ void cpu_exec(uint8_t opcode)
 {
 	uint8_t reg1, reg2, addr;
 
+	if (cpu.flag_clear_delay > 0)
+	{
+		cpu.flag_clear_delay--;
+		if (cpu.flag_clear_delay == 0)
+		{
+			cpu.equal_flag = false;
+		}
+	}
+
 	switch (opcode)
 	{
+		case NOP:
+			break;
 		case MOV:
 			reg1 = cpu.memory[cpu.pc++];
 			reg2 = cpu.memory[cpu.pc++];
@@ -93,6 +108,7 @@ void cpu_exec(uint8_t opcode)
 			cpu.pc = addr;
 			break;
 		case JEQ:
+			reg1 = cpu.memory[cpu.pc++];
 			addr = cpu.memory[cpu.pc++];
 			if (cpu.equal_flag) {
 				cpu.pc = addr;
@@ -101,11 +117,8 @@ void cpu_exec(uint8_t opcode)
 		case CMP:
 			reg1 = cpu.memory[cpu.pc++];
 			reg2 = cpu.memory[cpu.pc++];
-			if (cpu.reg[reg1] == cpu.reg[reg2]) {
-				cpu.equal_flag = true;
-			} else {
-				cpu.equal_flag = false;
-			}
+			cpu.equal_flag = (cpu.reg[reg1] == cpu.reg[reg2]);
+			cpu.flag_clear_delay = 2;
 			break;
 		// TODO: complete instruction set
 		default:
@@ -147,46 +160,63 @@ void assemble(const char* filename)
 
 	while (fgets(line, sizeof(line), fp))
 	{
-		char instruction[10];
-		int reg1, reg2, addr;
+		char instruction[10] = {0};
+		char reg1[10] = {0};
+		char reg2[10] = {0};
+		int addr;
 		if (strncmp(line, ";", 1) == 0)
 		{
 			// comment, ignore
 			continue;
 		}
-		else if (sscanf(line, "%s %d %d", instruction, &reg1, &reg2) == 3)
+		else if (sscanf(line, "%s %[^,], %s", instruction, reg1, reg2) == 3)
 		{
+			int reg1_n = reg1[1] - '0';
+			int reg2_n = reg2[1] - '0';
+
 			if (strncmp(instruction, "MOV", 3) == 0)
 			{
 				cpu.memory[mem_index++] = MOV;
-				cpu.memory[mem_index++] = reg1;
-				cpu.memory[mem_index++] = reg2;
+				cpu.memory[mem_index++] = reg1_n;
+				cpu.memory[mem_index++] = reg2_n;
 			} else if (strncmp(instruction, "ADD", 3) == 0)
 			{
 				cpu.memory[mem_index++] = ADD;
-				cpu.memory[mem_index++] = reg1;
-				cpu.memory[mem_index++] = reg2;
+				cpu.memory[mem_index++] = reg1_n;
+				cpu.memory[mem_index++] = reg2_n;
 			} else if (strncmp(instruction, "CMP", 3) == 0)
 			{
 				cpu.memory[mem_index++] = CMP;
-				cpu.memory[mem_index++] = reg1;
-				cpu.memory[mem_index++] = reg2;
+				cpu.memory[mem_index++] = reg1_n;
+				cpu.memory[mem_index++] = reg2_n;
 			}
-		} else if (sscanf(line, "%s %d", instruction, &addr) == 2)
+		} else if (sscanf(line, "%s %[^,], %d", instruction, reg1, &addr) == 2)
 		{
-			if (strncmp(instruction, "JMP", 3) == 0)
-			{
-				cpu.memory[mem_index++] = JMP;
-				cpu.memory[mem_index++] = addr;
-			} else if (strncmp(instruction, "JEQ", 3) == 0)
+			int reg1_n = reg1[1] - '0';
+
+			if (strncmp(instruction, "JEQ", 3) == 0)
 			{
 				cpu.memory[mem_index++] = JEQ;
-				cpu.memory[mem_index++] = reg1;
+				cpu.memory[mem_index++] = reg1_n;
 				cpu.memory[mem_index++] = addr;
 			}
-		} else if (strncmp(line, "HLT", 3) == 0)
+			else if (sscanf(line, "%s %d", instruction, &addr) == 2)
+			{
+				if (strncmp(instruction, "JMP", 3) == 0)
+				{
+					cpu.memory[mem_index++] = JMP;
+					cpu.memory[mem_index++] = addr;
+				}
+			}
+		} 
+		
+		else if (strncmp(line, "HLT", 3) == 0)
 		{
 			cpu.memory[mem_index++] = HLT;
+		}
+		else if (strncmp(line, "NOP", 3) == 0)
+		{
+			cpu.memory[mem_index++] = NOP;
 		}
 	}
 	fclose(fp);
@@ -211,7 +241,7 @@ void cpu_run()
 
 void cpu_dump()
 {
-	printf("\n*** CPU state dump ***\nPC: 0x%x\nHalted: %d\n\n", cpu.pc, cpu.halted);
+	printf("\n*** CPU state dump ***\nPC: 0x%x\nEqual flag: %d\nHalted: %d\n\n", cpu.pc, cpu.equal_flag, cpu.halted);
 	
 	for (size_t i=0; i<NUM_REGISTERS; i++)
 	{
