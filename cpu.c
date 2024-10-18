@@ -85,6 +85,10 @@ void cpu_exec(uint8_t opcode)
 		case HLT:
 			cpu.halted = true;
 			break;
+		case JMP:
+			addr = cpu.memory[cpu.pc++];
+			cpu.pc = addr;
+			break;
 		// TODO: complete instruction set
 		default:
 			printf("Unknown instruction: 0x%02X\n", opcode);
@@ -147,6 +151,11 @@ void assemble(const char* filename)
 			}
 		} else if (sscanf(line, "%s %d", instruction, &addr) == 2)
 		{
+			if (strncmp(instruction, "JMP", 3) == 0)
+			{
+				cpu.memory[mem_index++] = JMP;
+				cpu.memory[mem_index++] = addr;
+			}
 			// TODO for jmp...
 		} else if (strncmp(line, "HLT", 3) == 0)
 		{
@@ -202,9 +211,13 @@ void mem_dump()
 	puts("");
 }
 
-bool prefix(const char* pre, const char* str)
+/*
+ * Write to register: useful for debugging and testing
+*/
+
+void reg_write(int index, uint8_t val)
 {
-	return strncmp(pre, str, strlen(pre)) == 0;
+	cpu.reg[index] = val;
 }
 
 int main(int argc, char* argv[])
@@ -221,8 +234,10 @@ int main(int argc, char* argv[])
 	
 	// Dumping our program
 	mem_dump();
+	
+	reg_write(2, 0x10);
 	cpu_run();
-
+	
 	// Post-mortem analysis
 	cpu_dump();
 
