@@ -127,8 +127,12 @@ void assemble(const char* filename)
 	{
 		char instruction[10];
 		int reg1, reg2, addr;
-
-		if (sscanf(line, "%s %d %d", instruction, &reg1, &reg2) == 3)
+		if (strncmp(line, ";", 1) == 0)
+		{
+			// comment, ignore
+			continue;
+		}
+		else if (sscanf(line, "%s %d %d", instruction, &reg1, &reg2) == 3)
 		{
 			if (strncmp(instruction, "MOV", 3) == 0)
 			{
