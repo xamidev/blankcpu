@@ -23,6 +23,7 @@
 
 typedef enum
 {
+	// TODO: Bitwise operations (OR, AND, XOR, NOT, ...)
 	MOV = 1,
 	ADD,
 	SUB,
@@ -30,12 +31,13 @@ typedef enum
 	STORE,
 	JMP,
 	JEQ,
+	CMP,
 	HLT = 0xFF
 } instruction_set_t;
 
 /*
  * CPU structure definition
- * Contains 4 8-bit registers, memory, a program counter, and a halt switch.
+ * Contains 4 8-bit registers, memory, a program counter, a halt switch, and flags.
 */
 
 typedef struct
@@ -44,6 +46,7 @@ typedef struct
 	uint8_t memory[MEM_SIZE];
 	uint16_t pc;
 	bool halted;
+	bool equal_flag;
 } CPU_t;
 
 CPU_t cpu;
@@ -88,6 +91,21 @@ void cpu_exec(uint8_t opcode)
 		case JMP:
 			addr = cpu.memory[cpu.pc++];
 			cpu.pc = addr;
+			break;
+		case JEQ:
+			addr = cpu.memory[cpu.pc++];
+			if (cpu.equal_flag) {
+				cpu.pc = addr;
+			}
+			break;
+		case CMP:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			if (cpu.reg[reg1] == cpu.reg[reg2]) {
+				cpu.equal_flag = true;
+			} else {
+				cpu.equal_flag = false;
+			}
 			break;
 		// TODO: complete instruction set
 		default:
@@ -148,6 +166,11 @@ void assemble(const char* filename)
 				cpu.memory[mem_index++] = ADD;
 				cpu.memory[mem_index++] = reg1;
 				cpu.memory[mem_index++] = reg2;
+			} else if (strncmp(instruction, "CMP", 3) == 0)
+			{
+				cpu.memory[mem_index++] = CMP;
+				cpu.memory[mem_index++] = reg1;
+				cpu.memory[mem_index++] = reg2;
 			}
 		} else if (sscanf(line, "%s %d", instruction, &addr) == 2)
 		{
@@ -155,8 +178,12 @@ void assemble(const char* filename)
 			{
 				cpu.memory[mem_index++] = JMP;
 				cpu.memory[mem_index++] = addr;
+			} else if (strncmp(instruction, "JEQ", 3) == 0)
+			{
+				cpu.memory[mem_index++] = JEQ;
+				cpu.memory[mem_index++] = reg1;
+				cpu.memory[mem_index++] = addr;
 			}
-			// TODO for jmp...
 		} else if (strncmp(line, "HLT", 3) == 0)
 		{
 			cpu.memory[mem_index++] = HLT;
