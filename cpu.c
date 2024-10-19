@@ -1,5 +1,5 @@
 /*
- * Unnamed 8-bit processing unit
+ * Dumb8 8-bit processing unit
  * Made by github.com/xamidev
  *
  * This is free and unencumbered software released into the public domain.
@@ -74,6 +74,7 @@ CPU_t cpu;
 
 void cpu_init()
 {
+	printf("Initializing Dumb8 CPU...\n");
 	cpu.pc = 0;
 	cpu.halted = false;
 	cpu.equal_flag = false;

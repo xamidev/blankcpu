@@ -1,5 +1,5 @@
 all:
-	gcc -g *.c
+	gcc -g *.c -o dumb8
 
 clean:
 	rm a.out 
