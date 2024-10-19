@@ -23,17 +23,27 @@
 
 typedef enum
 {
-	// TODO: Bitwise operations (OR, AND, XOR, NOT, ...)
-	NOP = 0,
-	MOV = 1,
-	ADD,
-	SUB,
-	LOAD,
-	STORE,
-	JMP,
-	JEQ,
-	CMP,
-	HLT = 0xFF
+	// 0x00 -> No operation
+	NOP 	= 0,
+
+	// 0xA? -> Memory operations
+	MOV 	= 0xA0,
+	LOAD 	= 0xA1,
+	STORE 	= 0xA2,
+
+	// 0xB? -> Arithmetic operations
+	ADD 	= 0xB0,
+	SUB 	= 0xB1,
+
+	// 0xC? -> Bitwise operations
+	
+	// 0xE? -> Jump and comparisons
+	JMP 	= 0xE0,
+	JEQ 	= 0xE1,
+	CMP 	= 0xE2,
+	
+	// 0xF? -> Misc operations
+	HLT 	= 0xFF
 } instruction_set_t;
 
 /*
@@ -99,6 +109,11 @@ void cpu_exec(uint8_t opcode)
 			reg1 = cpu.memory[cpu.pc++];
 			reg2 = cpu.memory[cpu.pc++];
 			cpu.reg[reg1] += cpu.reg[reg2];
+			break;
+		case SUB:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] -= cpu.reg[reg2];
 			break;
 		case HLT:
 			cpu.halted = true;
@@ -189,6 +204,11 @@ void assemble(const char* filename)
 				cpu.memory[mem_index++] = CMP;
 				cpu.memory[mem_index++] = reg1_n;
 				cpu.memory[mem_index++] = reg2_n;
+			} else if (strncmp(instruction, "SUB", 3) == 0)
+			{
+				cpu.memory[mem_index++] = SUB;
+				cpu.memory[mem_index++] = reg1_n;
+				cpu.memory[mem_index++] = reg2_n;
 			}
 		} else if (sscanf(line, "%s %[^,], %d", instruction, reg1, &addr) == 2)
 		{
@@ -263,7 +283,42 @@ void mem_dump()
 		{
 			puts("");
 		}
-		printf("%02x ", cpu.memory[i]);	
+
+		switch (cpu.memory[i])
+		{
+			// Instructions (colored background)
+			case 0xa0:
+			case 0xa1:
+			case 0xa2:
+				printf("\e[42m%02x\e[0m ", cpu.memory[i]);
+				break;
+		
+			case 0xb0:
+			case 0xb1:
+				printf("\e[43m%02x\e[0m ", cpu.memory[i]);
+				break;
+
+			case 0xe0:
+			case 0xe1:
+			case 0xe2:	
+				printf("\e[44m%02x\e[0m ", cpu.memory[i]);
+				break;
+
+			case 0xff:
+				printf("\e[41m%02x\e[0m ", cpu.memory[i]);
+				break;
+
+			// General purpose registers (colored foreground)
+			case 0x01:
+			case 0x02:
+			case 0x03:
+			case 0x04:
+				printf("\e[36m%02x\e[0m ", cpu.memory[i]);
+				break;
+			default:
+				printf("%02x ", cpu.memory[i]);	
+				break;
+		}
 	}
 	puts("");
 }
