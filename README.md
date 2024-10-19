@@ -10,7 +10,7 @@ You can run a test program like that. I'll try making a developer's manual so on
 
 ```
 make
-./a.out program.asm
+./dumb8 program.asm
 ```
 
 ## Technical specifications
