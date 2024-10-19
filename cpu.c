@@ -38,6 +38,10 @@ typedef enum
 	AND	= 0xC1,
 	XOR	= 0xC2,
 
+	// 0xD? -> Input/output operations
+	OUT	= 0xD0,
+	IN	= 0xD1,
+
 	// 0xE? -> Jump and comparisons
 	JMP 	= 0xE0,
 	JEQ 	= 0xE1,
@@ -152,7 +156,14 @@ void cpu_exec(uint8_t opcode)
 			cpu.equal_flag = (cpu.reg[reg1] == cpu.reg[reg2]);
 			cpu.flag_clear_delay = 2;
 			break;
-		// TODO: complete instruction set
+		case OUT:
+			reg1 = cpu.memory[cpu.pc++];
+			putchar(cpu.reg[reg1]);
+			break;
+		case IN:
+			reg1 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] = getchar();
+			break;
 		default:
 			printf("Unknown instruction: 0x%02X\n", opcode);
 			cpu.halted = true;
@@ -203,6 +214,7 @@ void assemble(const char* filename)
 		}
 		else if (sscanf(line, "%s %[^,], %s", instruction, reg1, reg2) == 3)
 		{
+			//printf("SS1");
 			int reg1_n = reg1[1] - '0';
 			int reg2_n = reg2[1] - '0';
 
@@ -247,6 +259,7 @@ void assemble(const char* filename)
 			}
 		} else if (sscanf(line, "%s %[^,], %d", instruction, reg1, &addr) == 2)
 		{
+			//printf("SS2");
 			int reg1_n = reg1[1] - '0';
 
 			if (strncmp(instruction, "JEQ", 3) == 0)
@@ -257,14 +270,33 @@ void assemble(const char* filename)
 			}
 			else if (sscanf(line, "%s %d", instruction, &addr) == 2)
 			{
+				//printf("SS3");
 				if (strncmp(instruction, "JMP", 3) == 0)
 				{
 					cpu.memory[mem_index++] = JMP;
 					cpu.memory[mem_index++] = addr;
 				}
 			}
+
+			else if (sscanf(line, "%s %s", instruction, reg1) == 2)
+			{
+			    //printf("SS4");
+			    int reg1_n = reg1[1] - '0';
+
+			    if (strncmp(instruction, "OUT", 3) == 0)
+			    {
+				cpu.memory[mem_index++] = OUT;
+				cpu.memory[mem_index++] = reg1_n;
+			    }
+
+			    if (strncmp(instruction, "IN", 2) == 0)
+			    {
+				cpu.memory[mem_index++] = IN;
+				cpu.memory[mem_index++] = reg1_n;
+			    }
+			}	
 		} 
-		
+	
 		else if (strncmp(line, "HLT", 3) == 0)
 		{
 			cpu.memory[mem_index++] = HLT;
@@ -283,11 +315,13 @@ void assemble(const char* filename)
 
 void cpu_run()
 {
+	printf("\n[BEGIN CPU OUTPUT]\n");
 	while (!cpu.halted)
 	{
 		uint8_t opcode = cpu.memory[cpu.pc++];
 		cpu_exec(opcode);
 	}
+	printf("\n[END CPU OUTPUT]\n");
 }
 
 /*
@@ -335,6 +369,10 @@ void mem_dump()
 			case 0xc1:
 			case 0xc2:
 				printf("\e[45m%02x\e[0m ", cpu.memory[i]);
+				break;
+			
+			case 0xd0:
+				printf("\e[46m%02x\e[0m ", cpu.memory[i]);
 				break;
 
 			case 0xe0:
@@ -386,8 +424,9 @@ int main(int argc, char* argv[])
 	// Dumping our program
 	mem_dump();
 
-	reg_write(1, 0x12);	
-	reg_write(2, 0x10);
+	reg_write(1, 0x68);
+	reg_write(2, 0x69);
+	reg_write(3, 0x21);
 	cpu_run();
 	
 	// Post-mortem analysis
