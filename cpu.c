@@ -28,15 +28,16 @@ typedef enum
 
 	// 0xA? -> Memory operations
 	MOV 	= 0xA0,
-	LOAD 	= 0xA1,
-	STORE 	= 0xA2,
 
 	// 0xB? -> Arithmetic operations
 	ADD 	= 0xB0,
 	SUB 	= 0xB1,
 
 	// 0xC? -> Bitwise operations
-	
+	OR	= 0xC0,
+	AND	= 0xC1,
+	XOR	= 0xC2,
+
 	// 0xE? -> Jump and comparisons
 	JMP 	= 0xE0,
 	JEQ 	= 0xE1,
@@ -98,6 +99,7 @@ void cpu_exec(uint8_t opcode)
 
 	switch (opcode)
 	{
+		// Some lines are repeating.. Should make this a better way..
 		case NOP:
 			break;
 		case MOV:
@@ -114,6 +116,21 @@ void cpu_exec(uint8_t opcode)
 			reg1 = cpu.memory[cpu.pc++];
 			reg2 = cpu.memory[cpu.pc++];
 			cpu.reg[reg1] -= cpu.reg[reg2];
+			break;
+		case OR:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] |= cpu.reg[reg2];
+			break;
+		case AND:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] &= cpu.reg[reg2];
+			break;
+		case XOR:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] ^= cpu.reg[reg2];
 			break;
 		case HLT:
 			cpu.halted = true;
@@ -210,6 +227,24 @@ void assemble(const char* filename)
 				cpu.memory[mem_index++] = reg1_n;
 				cpu.memory[mem_index++] = reg2_n;
 			}
+			else if (strncmp(instruction, "OR", 2) == 0)
+			{
+			    cpu.memory[mem_index++] = OR;
+			    cpu.memory[mem_index++] = reg1_n;
+			    cpu.memory[mem_index++] = reg2_n;
+			}
+			else if (strncmp(instruction, "AND", 3) == 0)
+			{
+			    cpu.memory[mem_index++] = AND;
+			    cpu.memory[mem_index++] = reg1_n;
+			    cpu.memory[mem_index++] = reg2_n;
+			}
+			else if (strncmp(instruction, "XOR", 3) == 0)
+			{
+			    cpu.memory[mem_index++] = XOR;
+			    cpu.memory[mem_index++] = reg1_n;
+			    cpu.memory[mem_index++] = reg2_n;
+			}
 		} else if (sscanf(line, "%s %[^,], %d", instruction, reg1, &addr) == 2)
 		{
 			int reg1_n = reg1[1] - '0';
@@ -288,14 +323,18 @@ void mem_dump()
 		{
 			// Instructions (colored background)
 			case 0xa0:
-			case 0xa1:
-			case 0xa2:
 				printf("\e[42m%02x\e[0m ", cpu.memory[i]);
 				break;
 		
 			case 0xb0:
 			case 0xb1:
 				printf("\e[43m%02x\e[0m ", cpu.memory[i]);
+				break;
+
+			case 0xc0:
+			case 0xc1:
+			case 0xc2:
+				printf("\e[45m%02x\e[0m ", cpu.memory[i]);
 				break;
 
 			case 0xe0:
@@ -346,7 +385,8 @@ int main(int argc, char* argv[])
 	
 	// Dumping our program
 	mem_dump();
-	
+
+	reg_write(1, 0x12);	
 	reg_write(2, 0x10);
 	cpu_run();
 	
