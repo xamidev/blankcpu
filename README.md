@@ -6,11 +6,14 @@ This project is the implementation of a CPU in a high-level language, C. It aims
 
 ## How to test
 
-You can run a test program like that. I'll try making a developer's manual so one can make its own programs using the custom assembly here. 
+You can run a test program like that. I'll try making a developer's manual so one can make its own programs using the custom assembly here.
+
+`das` is the Dumb8 Assembler, which converts `.asm` files to `.bin` CPU executables. `dumb8` is the CPU emulator.
 
 ```
 make
-./dumb8 program.asm
+./das program.asm
+./dumb8 program.bin
 ```
 
 ## Technical specifications
@@ -58,3 +61,7 @@ NOP
 HLT
 
 ```
+
+## Known bugs
+
+- R0 is not usable (confusion with NOP opcode 0 in memory)
