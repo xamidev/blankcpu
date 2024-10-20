@@ -11,60 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
-#define MEM_SIZE	256
-#define NUM_REGISTERS	4
-
-/*
- * Instruction set
- * Here, we're making a RISC (reduced instruction set computer)
- * so we're staying minimalistic.
-*/
-
-typedef enum
-{
-	// 0x00 -> No operation
-	NOP 	= 0,
-
-	// 0xA? -> Memory operations
-	MOV 	= 0xA0,
-
-	// 0xB? -> Arithmetic operations
-	ADD 	= 0xB0,
-	SUB 	= 0xB1,
-
-	// 0xC? -> Bitwise operations
-	OR	= 0xC0,
-	AND	= 0xC1,
-	XOR	= 0xC2,
-
-	// 0xD? -> Input/output operations
-	OUT	= 0xD0,
-	IN	= 0xD1,
-
-	// 0xE? -> Jump and comparisons
-	JMP 	= 0xE0,
-	JEQ 	= 0xE1,
-	CMP 	= 0xE2,
-	
-	// 0xF? -> Misc operations
-	HLT 	= 0xFF
-} instruction_set_t;
-
-/*
- * CPU structure definition
- * Contains 4 8-bit registers, memory, a program counter, a halt switch, and flags.
-*/
-
-typedef struct
-{
-	uint8_t reg[NUM_REGISTERS];
-	uint8_t memory[MEM_SIZE];
-	uint16_t pc;
-	bool halted;
-	bool equal_flag;
-	int flag_clear_delay;
-} CPU_t;
+#include "cpu.h"
 
 CPU_t cpu;
 
@@ -91,7 +38,7 @@ void cpu_init()
 
 void cpu_exec(uint8_t opcode)
 {
-	uint8_t reg1, reg2, addr;
+	uint8_t reg1, reg2, addr, value;
 
 	if (cpu.flag_clear_delay > 0)
 	{
@@ -111,6 +58,11 @@ void cpu_exec(uint8_t opcode)
 			reg1 = cpu.memory[cpu.pc++];
 			reg2 = cpu.memory[cpu.pc++];
 			cpu.reg[reg1] = cpu.reg[reg2];
+			break;
+		case PUT:
+			reg1 = cpu.memory[cpu.pc++];
+			value = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] = value;
 			break;
 		case ADD:
 			reg1 = cpu.memory[cpu.pc++];
@@ -184,130 +136,32 @@ void cpu_load(const uint8_t* program, size_t size)
 	}
 }
 
-/*
- * Reading the assembly file and writing its instructions in
- * opcode format in memory
-*/
-
-void assemble(const char* filename)
+void load_program_from_bin(char* binary_file)
 {
-	FILE* fp = fopen(filename, "r");
+	FILE* binary_fp = fopen(binary_file, "rb");
 
-	if (!fp)
+	if (!binary_fp)
 	{
-		printf("Cannot read file '%s'\n", filename);
+		printf("Cannot open file '%s' for reading.\n", binary_file);
 		exit(1);
 	}
 
-	char line[256] = {0};
-	size_t mem_index = 0;
+	fseek(binary_fp, 0, SEEK_END);
+    size_t size = ftell(binary_fp);
+    rewind(binary_fp);
 
-	while (fgets(line, sizeof(line), fp))
-	{
-		char instruction[10] = {0};
-		char reg1[10] = {0};
-		char reg2[10] = {0};
-		int addr;
-		if (strncmp(line, ";", 1) == 0)
-		{
-			// comment, ignore
-			continue;
-		}
-		else if (sscanf(line, "%s %[^,], %s", instruction, reg1, reg2) == 3)
-		{
-			//printf("SS1");
-			int reg1_n = reg1[1] - '0';
-			int reg2_n = reg2[1] - '0';
+	uint8_t* program_buffer = (uint8_t*)malloc(size);
+    if (!program_buffer)
+    {
+        printf("Memory allocation failed\n");
+        fclose(binary_fp);
+        exit(1);
+    }
 
-			if (strncmp(instruction, "MOV", 3) == 0)
-			{
-				cpu.memory[mem_index++] = MOV;
-				cpu.memory[mem_index++] = reg1_n;
-				cpu.memory[mem_index++] = reg2_n;
-			} else if (strncmp(instruction, "ADD", 3) == 0)
-			{
-				cpu.memory[mem_index++] = ADD;
-				cpu.memory[mem_index++] = reg1_n;
-				cpu.memory[mem_index++] = reg2_n;
-			} else if (strncmp(instruction, "CMP", 3) == 0)
-			{
-				cpu.memory[mem_index++] = CMP;
-				cpu.memory[mem_index++] = reg1_n;
-				cpu.memory[mem_index++] = reg2_n;
-			} else if (strncmp(instruction, "SUB", 3) == 0)
-			{
-				cpu.memory[mem_index++] = SUB;
-				cpu.memory[mem_index++] = reg1_n;
-				cpu.memory[mem_index++] = reg2_n;
-			}
-			else if (strncmp(instruction, "OR", 2) == 0)
-			{
-			    cpu.memory[mem_index++] = OR;
-			    cpu.memory[mem_index++] = reg1_n;
-			    cpu.memory[mem_index++] = reg2_n;
-			}
-			else if (strncmp(instruction, "AND", 3) == 0)
-			{
-			    cpu.memory[mem_index++] = AND;
-			    cpu.memory[mem_index++] = reg1_n;
-			    cpu.memory[mem_index++] = reg2_n;
-			}
-			else if (strncmp(instruction, "XOR", 3) == 0)
-			{
-			    cpu.memory[mem_index++] = XOR;
-			    cpu.memory[mem_index++] = reg1_n;
-			    cpu.memory[mem_index++] = reg2_n;
-			}
-		} else if (sscanf(line, "%s %[^,], %d", instruction, reg1, &addr) == 2)
-		{
-			//printf("SS2");
-			int reg1_n = reg1[1] - '0';
-
-			if (strncmp(instruction, "JEQ", 3) == 0)
-			{
-				cpu.memory[mem_index++] = JEQ;
-				cpu.memory[mem_index++] = reg1_n;
-				cpu.memory[mem_index++] = addr;
-			}
-			else if (sscanf(line, "%s %d", instruction, &addr) == 2)
-			{
-				//printf("SS3");
-				if (strncmp(instruction, "JMP", 3) == 0)
-				{
-					cpu.memory[mem_index++] = JMP;
-					cpu.memory[mem_index++] = addr;
-				}
-			}
-
-			else if (sscanf(line, "%s %s", instruction, reg1) == 2)
-			{
-			    //printf("SS4");
-			    int reg1_n = reg1[1] - '0';
-
-			    if (strncmp(instruction, "OUT", 3) == 0)
-			    {
-				cpu.memory[mem_index++] = OUT;
-				cpu.memory[mem_index++] = reg1_n;
-			    }
-
-			    if (strncmp(instruction, "IN", 2) == 0)
-			    {
-				cpu.memory[mem_index++] = IN;
-				cpu.memory[mem_index++] = reg1_n;
-			    }
-			}	
-		} 
-	
-		else if (strncmp(line, "HLT", 3) == 0)
-		{
-			cpu.memory[mem_index++] = HLT;
-		}
-		else if (strncmp(line, "NOP", 3) == 0)
-		{
-			cpu.memory[mem_index++] = NOP;
-		}
-	}
-	fclose(fp);
+	fread(program_buffer, sizeof(uint8_t), size, binary_fp);
+	cpu_load(program_buffer, size);
+	free(program_buffer);
+	fclose(binary_fp);
 }
 
 /*
@@ -335,7 +189,7 @@ void cpu_dump()
 	
 	for (size_t i=0; i<NUM_REGISTERS; i++)
 	{
-		printf("R%d: 0x%x\n", i, cpu.reg[i]);
+		printf("R%lu: 0x%x\n", i, cpu.reg[i]);
 	}
 	puts("");
 }
@@ -358,6 +212,7 @@ void mem_dump()
 		{
 			// Instructions (colored background)
 			case 0xa0:
+			case 0xa1:
 				printf("\e[42m%02x\e[0m ", cpu.memory[i]);
 				break;
 		
@@ -416,18 +271,14 @@ int main(int argc, char* argv[])
 
 	if (argc < 2)
 	{
-		printf("Usage: %s <assembly file>\n", argv[0]);
+		printf("Usage: %s <program>\n", argv[0]);
 		return -1;
 	}
 
-	assemble(argv[1]);
-	
+	load_program_from_bin(argv[1]);
+
 	// Dumping our program
 	mem_dump();
-
-	reg_write(1, 0x68);
-	reg_write(2, 0x69);
-	reg_write(3, 0x21);
 	cpu_run();
 	
 	// Post-mortem analysis
