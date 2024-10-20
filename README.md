@@ -28,7 +28,10 @@ make
 
 ```
 ; Move register RY to register RX
-MOV RX, RY 
+MOV RX, RY
+
+; Put value X in register RX
+PUT RX, X
 
 ; Arithmetic addition and substraction stored in RX
 ADD RX, RY
