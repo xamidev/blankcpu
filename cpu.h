@@ -2,7 +2,7 @@
 #define CPU_H
 
 #define MEM_SIZE	256
-#define NUM_REGISTERS	4
+#define NUM_REGISTERS	8
 #define BUF_MAX     256
 
 /*

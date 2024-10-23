@@ -20,7 +20,7 @@ make
 
 - 8-bit processing unit
 - RISC (reduced instruction set computer)
-- 4 general purpose registers (labeled R0 to R3)
+- 8 general purpose registers (labeled Rx)
 - 1 input port, 1 output port (via getchar and putchar)
 - Turing-completeness: bitwise and arithmetic operations
 
@@ -33,9 +33,11 @@ MOV RX, RY
 ; Put value X in register RX
 PUT RX, X
 
-; Arithmetic addition and substraction stored in RX
+; Arithmetic operations. Result stored in RX
 ADD RX, RY
 SUB RX, RY
+MUL RX, RY
+DIV RX, RY
 
 ; Bitwise operations stored in RX
 OR RX, RY
