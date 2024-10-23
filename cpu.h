@@ -23,6 +23,8 @@ typedef enum
 	// 0xB? -> Arithmetic operations
 	ADD 	= 0xB0,
 	SUB 	= 0xB1,
+	MUL	= 0xB2,
+	DIV	= 0xB3,
 
 	// 0xC? -> Bitwise operations
 	OR	= 0xC0,

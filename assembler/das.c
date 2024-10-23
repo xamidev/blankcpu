@@ -106,6 +106,24 @@ void assemble(char* filename)
 			buffer[i++] = reg1_n;
 			buffer[i++] = reg2_n;
 		}
+		else if (strncmp(line, "MUL", 3) == 0)
+		{
+			sscanf(line, "%s %[^,], %s", instruction, reg1, reg2);	
+			int reg1_n = reg1[1] - '0';
+			int reg2_n = reg2[1] - '0';
+			buffer[i++] = MUL;
+			buffer[i++] = reg1_n;
+			buffer[i++] = reg2_n;
+		}
+		else if (strncmp(line, "DIV", 3) == 0)
+		{
+			sscanf(line, "%s %[^,], %s", instruction, reg1, reg2);	
+			int reg1_n = reg1[1] - '0';
+			int reg2_n = reg2[1] - '0';
+			buffer[i++] = DIV;
+			buffer[i++] = reg1_n;
+			buffer[i++] = reg2_n;
+		}
 		else if (strncmp(line, "OR", 3) == 0)
 		{
 			sscanf(line, "%s %[^,], %s", instruction, reg1, reg2);	

@@ -1,7 +1,6 @@
 ;this is a comment
 PUT R2, 5
-MOV R1, R2
-
-ADD R1, R2
+PUT R3, 2
+DIV R2, R3
 
 HLT

@@ -74,6 +74,16 @@ void cpu_exec(uint8_t opcode)
 			reg2 = cpu.memory[cpu.pc++];
 			cpu.reg[reg1] -= cpu.reg[reg2];
 			break;
+		case MUL:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] *= cpu.reg[reg2];
+			break;
+		case DIV:
+			reg1 = cpu.memory[cpu.pc++];
+			reg2 = cpu.memory[cpu.pc++];
+			cpu.reg[reg1] /= cpu.reg[reg2];
+			break;
 		case OR:
 			reg1 = cpu.memory[cpu.pc++];
 			reg2 = cpu.memory[cpu.pc++];
@@ -218,6 +228,8 @@ void mem_dump()
 		
 			case 0xb0:
 			case 0xb1:
+			case 0xb2:
+			case 0xb3:
 				printf("\e[43m%02x\e[0m ", cpu.memory[i]);
 				break;
 
