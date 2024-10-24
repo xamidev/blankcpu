@@ -26,6 +26,7 @@ void cpu_init()
 	cpu.halted = false;
 	cpu.equal_flag = false;
 	cpu.flag_clear_delay = 0;
+	cpu.increment = 0;
 	for (size_t i=0; i<NUM_REGISTERS; i++)
 	{
 		cpu.reg[i] = 0;
@@ -132,6 +133,7 @@ void cpu_exec(uint8_t opcode)
 			cpu.halted = true;
 			break;
 	}
+	cpu.increment++;
 }
 
 /*
@@ -185,6 +187,17 @@ void cpu_run()
 	{
 		uint8_t opcode = cpu.memory[cpu.pc++];
 		cpu_exec(opcode);
+		if (cpu.pc >= MEM_SIZE)
+		{
+			printf("\nProgram ended - program counter reached max memsize\n");
+			break;
+		}
+
+		if (cpu.increment > INF_LOOP_THRESHOLD)
+		{
+			printf("\nProgram ended - reached infinite loop threshold\n");
+			break;
+		}
 	}
 	printf("\n[END CPU OUTPUT]\n");
 }
@@ -210,12 +223,12 @@ void cpu_dump()
 
 void mem_dump()
 {
-	printf("\n*** Memory dump ***\n");
+	printf("\n*** Memory dump ***");
 	for (size_t i=0; i<MEM_SIZE; i++)
 	{
 		if (i%20 == 0)
 		{
-			puts("");
+			printf("\n%04ld: ", i);
 		}
 
 		switch (cpu.memory[i])
@@ -254,10 +267,14 @@ void mem_dump()
 				break;
 
 			// General purpose registers (colored foreground)
+			//case 0x00:
 			case 0x01:
 			case 0x02:
 			case 0x03:
 			case 0x04:
+			case 0x05:
+			case 0x06:
+			case 0x07:
 				printf("\e[36m%02x\e[0m ", cpu.memory[i]);
 				break;
 			default:

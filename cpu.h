@@ -4,6 +4,7 @@
 #define MEM_SIZE	256
 #define NUM_REGISTERS	8
 #define BUF_MAX     256
+#define INF_LOOP_THRESHOLD 10000
 
 /*
  * Instruction set
@@ -55,6 +56,7 @@ typedef struct
 	bool halted;
 	bool equal_flag;
 	int flag_clear_delay;
+	int increment;
 } CPU_t;
 
 #endif

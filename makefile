@@ -7,5 +7,9 @@ all: asm
 asm:
 	$(CC) assembler/*.c $(CFLAGS) -o das
 
+run:
+	./das program.asm
+	./dumb8 program.bin
+
 clean:
 	rm dumb8 das 

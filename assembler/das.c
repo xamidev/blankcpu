@@ -153,10 +153,8 @@ void assemble(char* filename)
 		}
 		else if (strncmp(line, "JEQ", 3) == 0)
 		{
-			sscanf(line, "%s %[^,], %d", instruction, reg1, &addr);
-			int reg1_n = reg1[1] - '0';
+			sscanf(line, "%s %d", instruction, &addr);
 			buffer[i++] = JEQ;
-			buffer[i++] = reg1_n;
 			buffer[i++] = addr;
 		}
 		else if (strncmp(line, "JMP", 3) == 0)

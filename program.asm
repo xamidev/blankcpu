@@ -1,6 +1,10 @@
 ;this is a comment
-PUT R0, 5
-PUT R3, 2
-ADD R0, R3
 
+PUT R0, 2
+PUT R1, 2
+CMP R0, R1
+JEQ 12
+HLT
+
+PUT R7, 10
 HLT
