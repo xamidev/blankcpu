@@ -13,12 +13,9 @@
 
 typedef enum
 {
-	// 0x00 -> No operation
-	NOP 	= 0,
-
 	// 0xA? -> Memory operations
 	MOV 	= 0xA0,
-	PUT		= 0xA1,
+	PUT	= 0xA1,
 
 	// 0xB? -> Arithmetic operations
 	ADD 	= 0xB0,
@@ -41,12 +38,13 @@ typedef enum
 	CMP 	= 0xE2,
 	
 	// 0xF? -> Misc operations
+	NOP	= 0xFE,
 	HLT 	= 0xFF
 } instruction_set_t;
 
 /*
  * CPU structure definition
- * Contains 4 8-bit registers, memory, a program counter, a halt switch, and flags.
+ * Contains 8-bit registers, memory, a program counter, a halt switch, and flags.
 */
 
 typedef struct

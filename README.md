@@ -69,4 +69,4 @@ HLT
 
 ## Known bugs
 
-- R0 is not usable (confusion with NOP opcode 0 in memory)
+- None for now? If you find one, please open an issue.

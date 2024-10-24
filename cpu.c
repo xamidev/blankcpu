@@ -197,7 +197,7 @@ void cpu_dump()
 {
 	printf("\n*** CPU state dump ***\nPC: 0x%x\nEqual flag: %d\nHalted: %d\n\n", cpu.pc, cpu.equal_flag, cpu.halted);
 
-	for (size_t i=1; i<NUM_REGISTERS; i+=2)
+	for (size_t i=0; i<NUM_REGISTERS; i+=2)
 	{
 		printf("R%lu: 0x%04x  R%lu: 0x%04x\n", i, cpu.reg[i], i+1, cpu.reg[i+1]);
 	}
