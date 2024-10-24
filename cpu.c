@@ -108,7 +108,6 @@ void cpu_exec(uint8_t opcode)
 			cpu.pc = addr;
 			break;
 		case JEQ:
-			reg1 = cpu.memory[cpu.pc++];
 			addr = cpu.memory[cpu.pc++];
 			if (cpu.equal_flag) {
 				cpu.pc = addr;

@@ -69,4 +69,5 @@ HLT
 
 ## Known bugs
 
-- None for now? If you find one, please open an issue.
+- (possibly) JEQ is inop
+- If you find one, please open an issue.
