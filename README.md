@@ -1,8 +1,11 @@
 # Dumb8-CPU
 
+![image](https://github.com/user-attachments/assets/d8d57847-95cb-41aa-ac28-1b0a701498bd)
+
 Continuing my exploration of the lower-level world...
 
 This project is the implementation of a CPU in a high-level language, C. It aims to have a reduced (minimalist) instruction set and still be Turing complete.
+In the future, I'd like to implement it in a hardware description language such as VHDL or Verilog. 
 
 ## How to test
 
@@ -69,5 +72,4 @@ HLT
 
 ## Known bugs
 
-- (possibly) JEQ is inop
-- If you find one, please open an issue.
+- If you find one, please open an issue. Contributions are highly appreciated!
